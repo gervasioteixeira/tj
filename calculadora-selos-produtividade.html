@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#0b7d73" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12171d" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Selos TJPB">
+<meta name="description" content="Simulador não-oficial de Selos de Produtividade (Res. 49/2026) — calcule sua pontuação e veja o que melhorar, tudo salvo apenas no seu navegador.">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Calculadora de Selos de Produtividade — TJPB (Res. 49/2026)</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#ffffff; --ink:#1f2a37; --muted:#5b6b7b;
+    --teal:#0f9b8e; --teal-dark:#0b7d73; --blue:#2f6fed; --border:#e2e8ee;
+    --ok:#1f9d55; --warn:#e08e0b; --bad:#d64545;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#12171d; --card:#1a2129; --ink:#e8edf2; --muted:#9aa9b6;
+      --border:#2a3542; --teal:#22b3a4; --teal-dark:#1a8f83; --blue:#5c8dff; --bad:#ff6b6b; }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+  header{background:linear-gradient(135deg,var(--teal-dark),var(--teal));color:#fff;padding:22px 28px;}
+  header h1{margin:0 0 4px;font-size:1.35rem;}
+  header p{margin:0;opacity:.92;font-size:.9rem;max-width:900px;}
+  .wrap{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;padding:20px;max-width:1400px;margin:0 auto;align-items:start;}
+  @media (max-width:980px){ .wrap{grid-template-columns:1fr;} .sidebar{position:static !important;} }
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px;}
+  .card.indicator h2{cursor:pointer;user-select:none;position:relative;padding-right:34px;}
+  .card h2{margin:0 0 4px;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+  .card h2 .pts{font-size:.78rem;font-weight:600;color:var(--teal-dark);background:rgba(15,155,142,.12);padding:2px 8px;border-radius:20px;}
+  .card h2 .titlewrap{display:flex;align-items:center;gap:8px;}
+  .card-num{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:50%;background:var(--teal);color:#fff;font-size:.76rem;font-weight:700;flex-shrink:0;}
+  .card-num.factor{background:var(--blue);border-radius:8px;}
+  .card .desc{color:var(--muted);font-size:.82rem;margin:2px 0 10px;line-height:1.4;}
+  .card-chevron{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;color:var(--muted);transition:transform .2s;border-radius:50%;position:absolute;top:-2px;right:0;}
+  .card.indicator h2:hover .card-chevron{background:rgba(0,0,0,.05);}
+  .card.collapsed .card-chevron{transform:rotate(-90deg);}
+  .card.collapsed .card-body{display:none;}
+  .card-summary{display:none;flex-wrap:wrap;gap:8px 14px;margin-top:2px;align-items:center;}
+  .card.collapsed .card-summary{display:flex;}
+  .cs-pill{font-size:.8rem;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap;}
+  .cs-pill.cs-good{background:rgba(31,157,85,.14);color:var(--ok);}
+  .cs-pill.cs-warn{background:rgba(224,142,11,.14);color:var(--warn);}
+  .cs-pill.cs-bad{background:rgba(214,69,69,.14);color:var(--bad);}
+  .cs-pill.cs-muted{background:rgba(0,0,0,.06);color:var(--muted);}
+  @media (prefers-color-scheme: dark){ .cs-pill.cs-muted{background:rgba(255,255,255,.08);} }
+  .cs-value{font-size:.82rem;color:var(--muted);}
+  .collapse-controls{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap;}
+  .apl{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:10px;cursor:pointer;padding:4px 0;min-height:44px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;}
+  label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:3px;}
+  input[type=number],select{width:100%;padding:10px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--ink);font-size:16px;min-height:44px;}
+  input[type=checkbox]{width:20px;height:20px;flex-shrink:0;cursor:pointer;}
+  input[type=checkbox]:disabled{cursor:not-allowed;opacity:.55;}
+  .apl:has(input:disabled){opacity:.6;}
+  label.row:has(input:disabled){opacity:.55;cursor:not-allowed;}
+  .field{margin-bottom:2px;}
+  .result-line{margin-top:10px;font-size:.85rem;padding:8px 10px;border-radius:8px;background:rgba(47,111,237,.08);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .result-line b{color:var(--blue);}
+  .checklist{display:flex;flex-direction:column;gap:2px;margin-top:6px;}
+  .checklist label.row{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--ink);cursor:pointer;min-height:40px;padding:2px 0;}
+  .checklist .row select{width:auto;}
+  fieldset.metas{border:none;padding:0;margin:0;}
+  .metarow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;font-size:.85rem;padding:5px 0;border-bottom:1px dashed var(--border);}
+  .metarow:last-child{border-bottom:none;}
+  .metarow span.pt{color:var(--muted);font-size:.75rem;}
+  .sidebar{position:sticky;top:16px;}
+  .selo-badge{text-align:center;padding:18px 10px;border-radius:12px;color:#fff;font-weight:700;font-size:1.15rem;margin-bottom:12px;transition:background .25s;}
+  .big-pct{font-size:2.1rem;font-weight:800;text-align:center;margin:4px 0;}
+  .selo-row{display:flex;gap:8px;justify-content:space-between;}
+  .selo-mini{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 4px;border-radius:10px;border:2px solid var(--border);background:transparent;transition:all .3s;}
+  .selo-mini-icon{font-size:1.5rem;filter:grayscale(1);opacity:.4;transition:all .3s;}
+  .selo-mini-label{font-size:.66rem;font-weight:600;color:var(--muted);text-align:center;}
+  .selo-mini.achieved{border-color:transparent;box-shadow:0 3px 10px rgba(0,0,0,.18);transform:translateY(-1px);}
+  .selo-mini.achieved .selo-mini-icon{filter:none;opacity:1;}
+  .selo-mini.achieved .selo-mini-label{color:#fff;}
+  .selo-mini-pct{font-size:.6rem;color:var(--muted);opacity:.75;}
+  .selo-mini.achieved .selo-mini-pct{color:#fff;opacity:.9;}
+  .selo-mini.achieved[data-tier="prata"]{background:linear-gradient(135deg,#8c98a5,#c3cdd6);}
+  .selo-mini.achieved[data-tier="ouro"]{background:linear-gradient(135deg,#d69f2f,#e0c059);}
+  .selo-mini.achieved[data-tier="diamante"]{background:linear-gradient(135deg,#2f8fd6,#59c3e0);}
+  .selo-mini.achieved[data-tier="excelencia"]{background:linear-gradient(135deg,#6a4fd6,#a06de0);}
+  .selo-mini.next-target{border-color:var(--blue);border-style:dashed;}
+  .sub{text-align:center;color:var(--muted);font-size:.78rem;margin-bottom:14px;}
+  .bar-wrap{position:relative;margin-bottom:10px;}
+  .goal-row{position:relative;height:22px;}
+  .bar-track{height:14px;border-radius:8px;background:var(--border);position:relative;overflow:visible;margin:2px 0;}
+  .bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--blue),var(--teal));transition:width .25s;}
+  .bar-tick{position:absolute;top:0;width:2px;height:14px;background:rgba(0,0,0,.25);}
+  @media (prefers-color-scheme: dark){ .bar-tick{background:rgba(255,255,255,.35);} }
+  .goal-mark{position:absolute;top:0;transform:translateX(-50%);text-align:center;font-size:.85rem;line-height:1;filter:grayscale(1);opacity:.4;transition:all .3s;}
+  .goal-mark.achieved{filter:none;opacity:1;transform:translateX(-50%) scale(1.15);}
+  .goal-mark .goal-pct{display:block;font-size:.58rem;font-weight:600;color:var(--muted);margin-top:2px;}
+  .goal-mark.achieved .goal-pct{color:var(--teal-dark);}
+  .marks{position:relative;height:14px;font-size:.66rem;color:var(--muted);}
+  .marks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;}
+  .marks span:first-child{transform:translateX(0);}
+  .rec{border-left:3px solid var(--blue);padding:8px 10px;background:rgba(47,111,237,.06);border-radius:0 8px 8px 0;margin-bottom:8px;font-size:.82rem;line-height:1.45;cursor:pointer;transition:background .15s;}
+  .rec:hover, .rec:focus{background:rgba(47,111,237,.14);outline:none;}
+  .rec b{display:block;color:var(--ink);margin-bottom:2px;}
+  .rec .impact{color:var(--teal-dark);font-weight:600;}
+  .rec-link{display:block;margin-top:5px;font-size:.72rem;color:var(--blue);font-weight:700;}
+  .card.flash-highlight{animation:flashHighlight 1.6s ease;}
+  @keyframes flashHighlight{
+    0%{box-shadow:0 0 0 3px var(--blue);}
+    70%{box-shadow:0 0 0 3px var(--blue);}
+    100%{box-shadow:none;}
+  }
+  .totals{font-size:.82rem;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+  .totals div{display:flex;justify-content:space-between;padding:2px 0;}
+  .toggle-example{background:var(--blue);color:#fff;border:none;padding:10px 16px;min-height:44px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;}
+  .toggle-example:hover{opacity:.9;}
+  .toggle-clear{background:transparent;color:var(--muted);border:1px solid var(--border);padding:10px 16px;min-height:44px;border-radius:8px;cursor:pointer;font-size:.85rem;}
+  .actions{display:flex;gap:8px;margin:4px 0 18px;flex-wrap:wrap;}
+  .actions button{flex:1 1 auto;}
+  .note{font-size:.76rem;color:var(--muted);background:rgba(224,142,11,.1);border:1px solid rgba(224,142,11,.3);padding:8px 10px;border-radius:8px;margin-bottom:16px;line-height:1.4;}
+  .formula{font-size:.72rem;color:var(--muted);font-family:ui-monospace,Consolas,monospace;background:var(--bg);padding:4px 8px;border-radius:6px;display:inline-block;margin-top:4px;}
+  details.help{margin-top:16px;}
+  details.help summary{font-size:.82rem;color:var(--muted);background:rgba(0,0,0,.04);border-color:var(--border);}
+  @media (prefers-color-scheme: dark){ details.help summary{background:rgba(255,255,255,.06);} }
+  details.help summary::marker{color:var(--muted);}
+  .danger-zone{max-width:1400px;margin:8px auto 0;padding:20px;text-align:center;}
+  .danger-zone p{font-size:.78rem;color:var(--muted);margin:0 0 10px;}
+  .btn-danger{background:transparent;color:var(--bad);border:1.5px solid var(--bad);padding:10px 22px;min-height:44px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .15s;}
+  .btn-danger:hover{background:var(--bad);color:#fff;}
+  footer{text-align:center;padding:24px;color:var(--muted);font-size:.75rem;line-height:1.6;}
+  footer a{color:var(--blue);}
+  summary{min-height:32px;padding:9px 12px;line-height:1.4;cursor:pointer;list-style-position:inside;
+    background:rgba(47,111,237,.08);border:1px solid rgba(47,111,237,.22);border-radius:8px;
+    font-weight:600;color:var(--blue);transition:background .15s;margin:6px 0;}
+  summary:hover{background:rgba(47,111,237,.15);}
+  summary::marker{color:var(--blue);}
+  @media (max-width:600px){
+    .wrap{padding:12px;gap:14px;}
+    header{padding:18px 16px;}
+    header h1{font-size:1.15rem;}
+    header p{font-size:.85rem;}
+    .card{padding:14px 14px;}
+    .metarow{grid-template-columns:1fr auto auto;font-size:.8rem;}
+    .metarow .row{min-height:36px;}
+    .selo-row{flex-wrap:wrap;}
+    .selo-mini{min-width:calc(50% - 8px);}
+    .actions{flex-direction:column;}
+    .actions button{width:100%;}
+  }
+  @media (hover:none) and (pointer:coarse){
+    .rec:active{background:rgba(47,111,237,.18);}
+    .apl:active, .checklist label.row:active{background:rgba(0,0,0,.03);}
+  }
+  .print-only{display:none;}
+  @media print{
+    body.printing-recs > *{display:none !important;}
+    body.printing-recs #print_recs{display:block !important;}
+    #print_recs{padding:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2a37;background:#fff;}
+    #print_recs h1{font-size:1.25rem;margin:0 0 4px;}
+    #print_recs .print-meta{font-size:.85rem;color:#5b6b7b;margin:0 0 18px;padding-bottom:10px;border-bottom:1px solid #ccc;}
+    #print_recs .rec-print{border-left:3px solid #2f6fed;padding:8px 12px;margin-bottom:12px;background:#f4f6fb;page-break-inside:avoid;}
+    #print_recs .rec-print b{display:block;margin-bottom:3px;}
+    #print_recs .rec-print .impact{color:#0b7d73;font-weight:600;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Calculadora de Selos de Produtividade — TJPB</h1>
+  <p>Simulador não-oficial baseado na Resolução nº 49/2026 (Selo de Eficiência e Gratificação de Produtividade). Ajuste os campos com seus dados e veja em tempo real quantos pontos você tem e o que falta para cada selo.</p>
+</header>
+
+<div class="wrap">
+  <div class="col-main">
+
+    <div class="card" id="card_max_oficial" style="border:1.5px solid var(--teal);">
+      <h2 style="font-size:.95rem;">🎯 Pontuação Máxima Aplicável da sua unidade</h2>
+      <p class="desc">Esse número é público entre as unidades do TJPB (confira com a Gerência de Planejamento ou o painel). Informar aqui permite <b>validar</b> se os indicadores marcados como "aplicável" nos cards abaixo batem com o valor oficial — se você esquecer de marcar algum, ou marcar um a mais, o aviso abaixo vai te avisar. Enquanto não bater, os indicadores que ultrapassariam o valor ficam <b>travados</b> automaticamente.</p>
+      <div class="grid" style="grid-template-columns:1fr;">
+        <div class="field"><label>Pontuação máxima aplicável oficial (opcional)</label><input type="number" id="max_oficial" oninput="calc()" placeholder="Ex.: 405 — deixe em branco para usar a soma automática"></div>
+      </div>
+      <div class="bar-track" style="margin-top:10px;"><div class="bar-fill" id="oficial_bar_fill" style="width:0%"></div></div>
+      <div id="max_oficial_check" class="result-line" style="margin-top:6px;"></div>
+      <div class="actions" style="margin-top:10px;padding:0;">
+        <button class="toggle-clear" onclick="resetAplicabilidade()">↺ Desmarcar aplicabilidade de todos os indicadores</button>
+      </div>
+      <p class="desc" style="margin-top:4px;">Isso desmarca só os checkboxes "aplicável" (e as submetas/subcompetências) — os números que você já digitou continuam salvos, para você testar outras combinações rapidamente.</p>
+    </div>
+
+    <div class="card" id="card_tipo_vara" style="border:1.5px solid var(--teal);">
+      <h2 style="font-size:.95rem;">🏛️ Tipo de vara (competência de execução penal)</h2>
+      <p class="desc">Essa informação é pedida duas vezes na Resolução — no card 8 (SEEU) como "Privativa/Mista" e no card 11 (Inspeções Prisionais) como "VEP/Demais" — mas é o mesmo dado sobre a sua unidade. Preencha aqui uma vez só e os dois cards são preenchidos automaticamente (você ainda pode ajustar cada um individualmente lá, se precisar de uma exceção).</p>
+      <div class="grid" style="grid-template-columns:1fr;">
+        <div class="field"><label>Minha vara é...</label>
+          <select id="tipo_vara_shared" onchange="syncTipoVara()">
+            <option value="">— selecione —</option>
+            <option value="privativa">Privativa de Execução Penal (VEP / PURA)</option>
+            <option value="mista">Mista ou outra competência (não exclusiva de execução penal)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Numeração dos cards:</b> os círculos <span class="card-num" style="vertical-align:middle;">1</span>–<span class="card-num" style="vertical-align:middle;">12</span> seguem a ordem dos incisos I a XI do Art. 4º da Resolução (o SEEU ocupa o "VII" duplicado no texto oficial, por isso aparece como <span class="card-num" style="vertical-align:middle;">8</span> aqui). Os cards com letra (<span class="card-num factor" style="vertical-align:middle;">A</span>/<span class="card-num factor" style="vertical-align:middle;">B</span>) são os fatores de ajuste (Art. 6º e Art. 5º §4º) — não somam pontos próprios, eles corrigem a pontuação relativa final.
+    </div>
+
+    <div class="note">
+      <b>Sobre as Cláusulas de Barreira (CB):</b> os valores de referência por grupo de competência (Anexos III e IX) estão em planilhas externas (links do Google Drive citados na Resolução), não incluídas no PDF. Preencha os campos "Cláusula de Barreira" com o valor do <u>seu grupo de competência</u> — pergunte à Gerência de Planejamento/Corregedoria se não souber o número exato. Sem esse valor a pontuação daquele indicador não pode ser calculada.
+    </div>
+
+    <div class="note">
+      <b>Seus dados ficam salvos automaticamente</b> neste navegador (localStorage), neste mesmo arquivo/computador — não são enviados para nenhum servidor. Ao reabrir o arquivo aqui, os valores voltam sozinhos. Isso só funciona no mesmo navegador e computador onde você preencheu; se limpar os dados de navegação ou abrir em outro dispositivo, os campos voltam a ficar vazios. Use "Limpar tudo" para apagar os dados salvos.
+    </div>
+
+    <div class="actions">
+      <span id="save_status" style="font-size:.78rem;color:var(--muted);align-self:center;"></span>
+    </div>
+
+    <div class="collapse-controls">
+      <button type="button" class="toggle-clear" onclick="collapseAllCards()">▾ Recolher todos os cards</button>
+      <button type="button" class="toggle-clear" onclick="expandAllCards()">▸ Expandir todos os cards</button>
+    </div>
+
+    <!-- ACERVO RELATIVO -->
+    <div class="card indicator" id="card_ar">
+      <h2 onclick="toggleCard('card_ar')"><span class="titlewrap"><span class="card-num">1</span>Acervo Relativo (AR)</span> <span class="pts">até 100 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_ar"></div>
+      <div class="card-body">
+      <p class="desc">Mede o estoque de processos pendentes em relação à demanda média de entrada. Quanto <b>menor</b>, melhor.</p>
+      <span class="formula">AR = (CP ÷ médiaCN₃anos) × (1 + log₁₀(médiaCN₃anos))</span>
+      <label class="apl"><input type="checkbox" id="ar_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
+
+      <div class="grid" id="ar_calc_fields">
+        <div class="field"><label>Casos Pendentes Líquidos (CP) — hoje, variável ✎</label><input type="number" id="ar_cp" oninput="calc()"></div>
+        <div class="field"><label>Casos Novos — ano atual (parcial, variável ✎)</label><input type="number" id="ar_cn1" oninput="calc()"></div>
+        <div class="field"><label>Casos Novos — ano anterior (histórico, fixo)</label><input type="number" id="ar_cn2" oninput="calc()"></div>
+        <div class="field"><label>Casos Novos — há 2 anos (histórico, fixo)</label><input type="number" id="ar_cn3" oninput="calc()"></div>
+        <div class="field"><label>Cláusula de Barreira (CB) do grupo</label><input type="number" step="0.01" id="ar_cb" oninput="calc()"></div>
+      </div>
+
+      <p class="desc" style="margin-top:6px;">✎ CP e Casos Novos do ano atual são o que você ainda pode influenciar em 2026 (baixar processos, e o próprio ritmo de entrada de casos novos). Os dois anos anteriores já fecharam — são fatos históricos, preencha uma vez e deixe fixos.</p>
+      <p class="desc"><b>Atenção:</b> confirmamos com dados reais que este CP <b>não</b> é a mesma base usada no % Processos Antigos (aquele usa "Processos Ativos", um universo mais amplo) — preencha os dois separadamente.</p>
+
+      <div id="ar_ideal_hint" class="result-line" style="background:rgba(31,157,85,.08);"></div>
+
+      <details style="margin-top:8px;">
+        <summary style="font-size:.85rem;">Reconciliar com o AR do painel (quando falta algum dado)</summary>
+        <div style="margin-top:8px;padding:10px 12px;background:rgba(47,111,237,.06);border-radius:8px;">
+          <div class="field"><label>AR informado no painel</label><input type="number" step="0.01" id="ar_reverse_target"></div>
+
+          <div style="margin-top:10px;">
+            <label style="margin-bottom:4px;">① Tenho os Casos Novos dos 3 anos, mas não sei o CP:</label>
+            <button type="button" class="toggle-clear" onclick="fillCpFromAr()">Calcular o CP a partir do AR ⟵</button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label style="margin-bottom:4px;">② Tenho o CP e os Casos Novos deste ano, mas não sei os 2 anos anteriores:</label>
+            <button type="button" class="toggle-clear" onclick="fillCnFromAr()">Calcular a média do triênio ⟵</button>
+            <p class="desc" style="margin-top:4px;">Distribui a diferença igualmente entre "ano anterior" e "há 2 anos" — ajuste depois se souber os valores reais de cada ano.</p>
+          </div>
+        </div>
+      </details>
+
+      <label class="apl" style="margin-top:10px;"><input type="checkbox" id="ar_alt" onchange="calc()"> Regra alternativa: grupo pequeno (2 a 8 unidades) com desigualdade &gt;50% entre acervo do 1º e último colocado, e eu reduzi ≥10% o AR do ano anterior</label>
+      <div class="grid">
+        <div class="field"><label>AR do ano anterior (para a regra alternativa)</label><input type="number" step="0.01" id="ar_prev" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>AR calculado: <b id="ar_val">0</b></span><span>Pontos: <b id="ar_pts">0</b> / 100</span></div>
+      </div>
+    </div>
+
+    <!-- TEMPO MEDIO -->
+    <div class="card indicator" id="card_tp">
+      <h2 onclick="toggleCard('card_tp')"><span class="titlewrap"><span class="card-num">2</span>Tempo Médio de Processos Pendentes Líquidos</span> <span class="pts">até 115 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_tp"></div>
+      <div class="card-body">
+      <p class="desc">Tempo médio (em dias) de tramitação dos processos pendentes. Quanto <b>menor</b>, melhor.</p>
+      <label class="apl"><input type="checkbox" id="tp_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="grid">
+        <div class="field"><label>Tempo médio atual (dias)</label><input type="number" id="tp_val" oninput="calc()"></div>
+        <div class="field"><label>Cláusula de Barreira (CB) do grupo, em dias</label><input type="number" id="tp_cb" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>Pontos: <b id="tp_pts">0</b> / 115</span></div>
+      </div>
+    </div>
+
+    <!-- IAD -->
+    <div class="card indicator" id="card_iad">
+      <h2 onclick="toggleCard('card_iad')"><span class="titlewrap"><span class="card-num">3</span>Índice de Atendimento à Demanda (IAD)</span> <span class="pts">até 20 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_iad"></div>
+      <div class="card-body">
+      <p class="desc">IAD = processos baixados ÷ casos novos no período. Meta: 100% (baixar pelo menos o que entra).</p>
+      <label class="apl"><input type="checkbox" id="iad_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="grid">
+        <div class="field"><label>Processos baixados no período</label><input type="number" id="iad_baixados" oninput="calc()"></div>
+        <div class="field"><label>Casos novos no período</label><input type="number" id="iad_novos" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>IAD: <b id="iad_val">0%</b></span><span>Pontos: <b id="iad_pts">0</b> / 20</span></div>
+      </div>
+    </div>
+
+    <!-- METAS CNJ -->
+    <div class="card indicator" id="card_metas">
+      <h2 onclick="toggleCard('card_metas')"><span class="titlewrap"><span class="card-num">4</span>Metas Nacionais do CNJ</span> <span class="pts">até 60 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_metas"></div>
+      <div class="card-body">
+      <p class="desc">Marque quais metas se aplicam à sua unidade e quais foram cumpridas no ano-base.</p>
+      <label class="apl"><input type="checkbox" id="metas_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <fieldset class="metas" id="metas_list">
+        <div class="metarow"><span>Meta 2 <span class="pt">(15 pts)</span></span>
+          <label class="row"><input type="checkbox" class="meta_apl" data-id="m2" checked onchange="calc()"> aplicável</label>
+          <label class="row"><input type="checkbox" class="meta_ok" data-id="m2" onchange="calc()"> cumprida</label></div>
+        <div class="metarow"><span>Meta 4 <span class="pt">(5 pts)</span></span>
+          <label class="row"><input type="checkbox" class="meta_apl" data-id="m4" checked onchange="calc()"> aplicável</label>
+          <label class="row"><input type="checkbox" class="meta_ok" data-id="m4" onchange="calc()"> cumprida</label></div>
+        <div class="metarow"><span>Meta 5 <span class="pt">(15 pts)</span></span>
+          <label class="row"><input type="checkbox" class="meta_apl" data-id="m5" checked onchange="calc()"> aplicável</label>
+          <label class="row"><input type="checkbox" class="meta_ok" data-id="m5" onchange="calc()"> cumprida</label></div>
+        <div class="metarow"><span>Meta 6 <span class="pt">(5 pts)</span></span>
+          <label class="row"><input type="checkbox" class="meta_apl" data-id="m6" onchange="calc()"> aplicável</label>
+          <label class="row"><input type="checkbox" class="meta_ok" data-id="m6" onchange="calc()"> cumprida</label></div>
+        <div class="metarow"><span>Meta 7 <span class="pt">(5 pts)</span></span>
+          <label class="row"><input type="checkbox" class="meta_apl" data-id="m7" onchange="calc()"> aplicável</label>
+          <label class="row"><input type="checkbox" class="meta_ok" data-id="m7" onchange="calc()"> cumprida</label></div>
+        <div class="metarow"><span>Meta 8 <span class="pt">(10 pts)</span></span>
+          <label class="row"><input type="checkbox" class="meta_apl" data-id="m8" checked onchange="calc()"> aplicável</label>
+          <label class="row"><input type="checkbox" class="meta_ok" data-id="m8" onchange="calc()"> cumprida</label></div>
+        <div class="metarow"><span>Meta 10 <span class="pt">(5 pts)</span></span>
+          <label class="row"><input type="checkbox" class="meta_apl" data-id="m10" checked onchange="calc()"> aplicável</label>
+          <label class="row"><input type="checkbox" class="meta_ok" data-id="m10" onchange="calc()"> cumprida</label></div>
+      </fieldset>
+      <div class="result-line"><span>Pontos máximos aplicáveis: <b id="metas_max">0</b></span><span>Pontos obtidos: <b id="metas_pts">0</b></span></div>
+      </div>
+    </div>
+
+    <!-- PROCESSOS ANTIGOS -->
+    <div class="card indicator" id="card_antigos">
+      <h2 onclick="toggleCard('card_antigos')"><span class="titlewrap"><span class="card-num">5</span>% Processos Antigos</span> <span class="pts">até 35 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_antigos"></div>
+      <div class="card-body">
+      <p class="desc">Processo antigo = distribuído e ainda ativo desde o ano de corte da meta vigente até hoje. O ano de corte avança 1 ano a cada ano (hoje é <span id="ant_cutoff_label">2022</span>; no ano que vem passa a ser <span id="ant_cutoff_next_label">2023</span>, e assim por diante) — ajuste o campo abaixo quando a meta mudar. Quanto <b>menor</b>, melhor.</p>
+      <label class="apl"><input type="checkbox" id="ant_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
+
+      <div class="grid">
+        <div class="field"><label>Processos antigos — quantidade líquida (distribuídos até o ano de corte)</label><input type="number" id="ant_qtd" oninput="calc()"></div>
+        <div class="field"><label>Processos Ativos (total)</label><input type="number" id="ant_total" oninput="calc()"></div>
+        <div class="field"><label>Cláusula de Barreira (CB) do grupo, em %</label><input type="number" step="0.01" id="ant_cb" oninput="calc()"></div>
+        <div class="field"><label>Ano de corte ("antigo" = distribuído até este ano)</label><input type="number" id="ant_cutoff_year" oninput="calc()"></div>
+      </div>
+      <p class="desc"><b>Confirmado com dados reais do painel:</b> o denominador aqui é <b>"Processos Ativos"</b> (universo mais amplo, ex.: 1.254), não o "Casos Pendentes Líquido" do Acervo Relativo (ex.: 824) — são campos diferentes, preencha cada um com o valor da tela correspondente do sistema. Teste real: 264 ÷ 1.254 = 21,05%, batendo exatamente com o painel.</p>
+
+      <div class="result-line"><span>% de processos antigos: <b id="ant_pct_show">0%</b></span><span>Pontos: <b id="ant_pts">0</b> / 35</span></div>
+
+      <div id="ant_ideal_hint" class="result-line" style="background:rgba(31,157,85,.08);"></div>
+
+      <details style="margin-top:8px;">
+        <summary style="font-size:.85rem;">Só sei a % informada no painel, não a quantidade exata — descobrir a partir do total</summary>
+        <div style="margin-top:8px;padding:10px 12px;background:rgba(47,111,237,.06);border-radius:8px;">
+          <label style="margin-bottom:4px;">Preencha "Processos Ativos" acima, informe aqui a % do painel e clique para preencher a quantidade.</label>
+          <div class="grid" style="grid-template-columns:1fr auto;align-items:end;">
+            <div class="field"><label>% informada no painel</label><input type="number" step="0.01" id="ant_reverse_target"></div>
+            <button type="button" class="toggle-clear" style="white-space:nowrap;height:34px;" onclick="fillAntQtdFromPct()">Preencher quantidade a partir da % ⟵</button>
+          </div>
+        </div>
+      </details>
+      </div>
+    </div>
+
+    <!-- PARALISADOS -->
+    <div class="card indicator" id="card_paralisados">
+      <h2 onclick="toggleCard('card_paralisados')"><span class="titlewrap"><span class="card-num">6</span>Processos Paralisados &gt; 90 dias</span> <span class="pts">até 50 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_paralisados"></div>
+      <div class="card-body">
+      <p class="desc">Fórmula: (processos em dia ÷ total ativos) × 50. Quanto <b>menor</b> o % paralisado, melhor. <b>Importante:</b> o TPA é o total geral (parados + em dia) — confirmado com dados reais do painel: 990 em dia + 267 parados = TPA 1257.</p>
+      <label class="apl"><input type="checkbox" id="par_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="grid">
+        <div class="field"><label>Processos paralisados há mais de 90 dias</label><input type="number" id="par_qtd" oninput="calc()"></div>
+        <div class="field"><label>Quantidade total de processos (TPA)</label><input type="number" id="par_total" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>Processos em dia (calculado: total − parados): <b id="par_ok_show">0</b></span><span>% paralisados: <b id="par_pctshow">0%</b></span></div>
+      <div class="result-line"><span>Pontos: <b id="par_pts">0</b> / 50</span></div>
+      </div>
+    </div>
+
+    <!-- BALCAO VIRTUAL -->
+    <div class="card indicator" id="card_balcao">
+      <h2 onclick="toggleCard('card_balcao')"><span class="titlewrap"><span class="card-num">7</span>Satisfação — Balcão Virtual</span> <span class="pts">até 20 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_balcao"></div>
+      <div class="card-body">
+      <p class="desc">Fórmula: (% avaliações positivas ÷ 90%) × 20, limitado a 20 pontos.</p>
+      <label class="apl"><input type="checkbox" id="bv_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="grid">
+        <div class="field"><label>% de avaliações positivas (notas 4 e 5)</label><input type="number" step="0.01" id="bv_pct" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>Pontos: <b id="bv_pts">0</b> / 20</span></div>
+      </div>
+    </div>
+
+    <!-- SEEU -->
+    <div class="card indicator" id="card_seeu">
+      <h2 onclick="toggleCard('card_seeu')"><span class="titlewrap"><span class="card-num">8</span>SEEU — Execução Penal</span> <span class="pts">até 100 (PURA) / 70 (MISTA)</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_seeu"></div>
+      <div class="card-body">
+      <p class="desc">Aplicável apenas a varas com competência de execução penal. Marque cada critério atendido.</p>
+      <label class="apl"><input type="checkbox" id="seeu_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="field" style="max-width:220px;"><label>Tipo de vara</label>
+        <select id="seeu_tipo" onchange="calc()">
+          <option value="pura">Privativa (PURA)</option>
+          <option value="mista">Mista</option>
+        </select>
+      </div>
+      <div class="checklist">
+        <label class="row"><input type="checkbox" class="seeu_ok" data-pura="10" data-mista="10" onchange="calc()"> Incidentes "Término de Pena" &lt; 0,2% do acervo</label>
+        <label class="row"><input type="checkbox" class="seeu_ok" data-pura="15" data-mista="10" onchange="calc()"> Demais incidentes de execução &lt; 1,0% do acervo</label>
+        <label class="row"><input type="checkbox" class="seeu_ok" data-pura="15" data-mista="10" onchange="calc()"> Guias aguardando cumprimento de decisão &gt; 30 dias: zeradas</label>
+        <label class="row"><input type="checkbox" class="seeu_ok" data-pura="15" data-mista="10" onchange="calc()"> Guias pendentes de apreciação judicial &gt; 30 dias: zeradas</label>
+        <label class="row"><input type="checkbox" class="seeu_ok" data-pura="15" data-mista="10" onchange="calc()"> Juntadas pendentes de análise &gt; 30 dias: zeradas</label>
+        <label class="row"><input type="checkbox" class="seeu_ok" data-pura="10" data-mista="10" onchange="calc()"> Guias com inconsistência: zeradas</label>
+        <label class="row"><input type="checkbox" class="seeu_ok" data-pura="20" data-mista="10" onchange="calc()"> Processos com sentença de extinção aguardando arquivamento: zerados</label>
+      </div>
+      <div class="result-line"><span>Pontos: <b id="seeu_pts">0</b> / <b id="seeu_max">100</b></span></div>
+      </div>
+    </div>
+
+    <!-- MEDIDA PROTETIVA -->
+    <div class="card indicator" id="card_protetiva">
+      <h2 onclick="toggleCard('card_protetiva')"><span class="titlewrap"><span class="card-num">9</span>Medidas Protetivas de Urgência</span> <span class="pts">10 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_protetiva"></div>
+      <div class="card-body">
+      <p class="desc">Tempo médio entre recebimento/ajuizamento e a 1ª decisão (concessão/denegação). Prêmio integral se ≤ 2 dias.</p>
+      <label class="apl"><input type="checkbox" id="mp_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="grid">
+        <div class="field"><label>Tempo médio atual (dias)</label><input type="number" step="0.1" id="mp_tempo" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>Pontos: <b id="mp_pts">0</b> / 10</span></div>
+      </div>
+    </div>
+
+    <!-- SNA -->
+    <div class="card indicator" id="card_sna">
+      <h2 onclick="toggleCard('card_sna')"><span class="titlewrap"><span class="card-num">10</span>Reavaliação de Acolhimento (SNA)</span> <span class="pts">até 30 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_sna"></div>
+      <div class="card-body">
+      <p class="desc">% de acolhimentos com mais de 3 meses no SNA que tiveram reavaliação nos 90 dias seguintes. ≥98% = 30 pts · 90–98% = 15 pts · abaixo = 0. <b>Confirmado com dados reais do painel:</b> se não há nenhum acolhimento há mais de 3 meses no SNA, a unidade recebe os 30 pontos cheios (nada a reavaliar).</p>
+      <label class="apl"><input type="checkbox" id="sna_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <label class="apl"><input type="checkbox" id="sna_none" onchange="calc()"> Não há acolhimentos há mais de 3 meses no SNA (nada a reavaliar → pontuação cheia)</label>
+      <div class="grid" id="sna_fields">
+        <div class="field"><label>% de reavaliação atual</label><input type="number" step="0.01" id="sna_pct" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>Pontos: <b id="sna_pts">0</b> / 30</span></div>
+      </div>
+    </div>
+
+    <!-- INSPECOES PRISIONAIS -->
+    <div class="card indicator" id="card_insp_prisionais">
+      <h2 onclick="toggleCard('card_insp_prisionais')"><span class="titlewrap"><span class="card-num">11</span>Inspeções em Estabelecimentos Prisionais</span> <span class="pts">15 (VEP) / 10 (demais)</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_insp_prisionais"></div>
+      <div class="card-body">
+      <p class="desc">Fórmula adaptada da Portaria CNJ 471/2025 (Art. 9º, XXV-a): <b>inspeção atrasada vale meio ponto</b>, não zero — <code>Pontos = (meses no prazo + meses atrasados÷2) ÷ 12 × máximo</code>. <b>Atenção:</b> se faltar QUALQUER mês sem nenhuma inspeção lançada, a Portaria zera a pontuação inteira do indicador.</p>
+      <label class="apl"><input type="checkbox" id="ip_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="grid">
+        <div class="field"><label>Tipo de vara</label>
+          <select id="ip_tipo" onchange="calc()"><option value="vep">Privativa Exec. Penal (15 pts)</option><option value="outras">Demais (10 pts)</option></select>
+        </div>
+        <div class="field"><label>Meses com inspeção DENTRO do prazo (0–12)</label><input type="number" min="0" max="12" id="ip_no_prazo" oninput="calc()"></div>
+        <div class="field"><label>Meses com inspeção FORA do prazo, mas feita (0–12)</label><input type="number" min="0" max="12" id="ip_fora_prazo" oninput="calc()"></div>
+      </div>
+      <label class="apl" style="margin-top:8px;"><input type="checkbox" id="ip_faltou" onchange="calc()"> Houve algum mês sem NENHUMA inspeção lançada (zera a pontuação, pela regra da Portaria)</label>
+      <div class="result-line"><span>Pontos: <b id="ip_pts">0</b> / <b id="ip_max">15</b></span></div>
+      </div>
+    </div>
+
+    <!-- INSPECOES SOCIOEDUCATIVAS -->
+    <div class="card indicator" id="card_insp_socio">
+      <h2 onclick="toggleCard('card_insp_socio')"><span class="titlewrap"><span class="card-num">12</span>Inspeções — Medidas Socioeducativas</span> <span class="pts" id="is_max_label">até 10 pontos (5+5)</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_insp_socio"></div>
+      <div class="card-body">
+      <p class="desc">5 pontos meio fechado + 5 pontos meio aberto. Fórmula adaptada da Portaria CNJ 471/2025 (Art. 9º, IX): <b>inspeção atrasada vale meio ponto</b>, não zero. <b>Nem toda unidade tem as duas competências</b> — marque só a(s) que se aplica(m) à sua vara (confirmado com dados reais: algumas unidades só têm "Meio Aberto", valendo só 5 pontos no total, não 10).</p>
+      <label class="apl"><input type="checkbox" id="is_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
+      <div class="grid">
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:5px;"><input type="checkbox" id="is_fechado_apl" onchange="calc()"> Meio Fechado se aplica (5 pts)</label>
+          <input type="number" min="0" max="12" id="is_fechado_no_prazo" oninput="calc()" placeholder="Meses no prazo (0–12)">
+          <input type="number" min="0" max="12" id="is_fechado_fora_prazo" oninput="calc()" placeholder="Meses fora do prazo (0–12)" style="margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:5px;margin-top:4px;font-size:.76rem;"><input type="checkbox" id="is_fechado_faltou" onchange="calc()"> Faltou algum mês (zera)</label>
+        </div>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:5px;"><input type="checkbox" id="is_aberto_apl" onchange="calc()"> Meio Aberto se aplica (5 pts)</label>
+          <input type="number" min="0" max="12" id="is_aberto_no_prazo" oninput="calc()" placeholder="Meses no prazo (0–12)">
+          <input type="number" min="0" max="12" id="is_aberto_fora_prazo" oninput="calc()" placeholder="Meses fora do prazo (0–12)" style="margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:5px;margin-top:4px;font-size:.76rem;"><input type="checkbox" id="is_aberto_faltou" onchange="calc()"> Faltou algum mês (zera)</label>
+        </div>
+      </div>
+      <div class="result-line"><span>Pontos: <b id="is_pts">0</b> / <b id="is_max_show">10</b></span></div>
+      </div>
+    </div>
+
+    <!-- FATOR POTENCIALIZADOR -->
+    <div class="card indicator" id="card_conc">
+      <h2 onclick="toggleCard('card_conc')"><span class="titlewrap"><span class="card-num factor">A</span>Fator Potencializador — Índice de Conciliação</span> <span class="pts">+1 p.p.</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_conc"></div>
+      <div class="card-body">
+      <p class="desc">Se a unidade atingir Índice de Conciliação ≥ 15% em <u>todos</u> os meses aplicáveis do ano, soma-se +1 ponto percentual direto na pontuação relativa final.</p>
+      <label class="apl"><input type="checkbox" id="conc_ok" onchange="calc()"> Atingi ≥15% de conciliação em todos os meses aplicáveis</label>
+      </div>
+    </div>
+
+    <!-- FATOR DE CORRECAO -->
+    <div class="card indicator" id="card_ftc">
+      <h2 onclick="toggleCard('card_ftc')"><span class="titlewrap"><span class="card-num factor">B</span>Fator de Correção — Ouvidoria</span> <span class="pts">FTc1</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_ftc"></div>
+      <div class="card-body">
+      <p class="desc">Penaliza a pontuação final quando menos de 95% das demandas da Ouvidoria são respondidas em até 20 dias.</p>
+      <span class="formula">FTc1 = ((DA20d ÷ Dptotal) ÷ 0,95 − 1) ÷ 100 · aplicado só se negativo</span>
+      <div class="grid">
+        <div class="field"><label>Demandas respondidas em até 20 dias</label><input type="number" id="ftc_da20" oninput="calc()"></div>
+        <div class="field"><label>Total de demandas recebidas</label><input type="number" id="ftc_dp" oninput="calc()"></div>
+      </div>
+      <div class="result-line"><span>% respondido em 20 dias: <b id="ftc_pctshow">—</b></span><span>FTc1: <b id="ftc_val">0%</b></span></div>
+
+      <details style="margin-top:8px;">
+        <summary style="font-size:.85rem;">Só sei o % de atendimento no prazo do painel, não as quantidades — preencher a partir da %</summary>
+        <div style="margin-top:8px;padding:10px 12px;background:rgba(47,111,237,.06);border-radius:8px;">
+          <label style="margin-bottom:4px;">O resultado do FTc1 depende só da proporção entre as duas quantidades, não dos valores absolutos. Se souber o "Total de demandas recebidas", preencha-o acima antes de usar isto; se não souber, deixamos 100 como referência (o FTc1 calculado fica igual de qualquer forma).</label>
+          <div class="grid" style="grid-template-columns:1fr auto;align-items:end;">
+            <div class="field"><label>% Atendimento no Prazo (painel)</label><input type="number" step="0.01" id="ftc_reverse_target"></div>
+            <button type="button" class="toggle-clear" style="white-space:nowrap;height:34px;" onclick="fillFtcFromPct()">Preencher a partir da % ⟵</button>
+          </div>
+        </div>
+      </details>
+      </div>
+    </div>
+
+    <details class="help">
+      <summary>Limitações desta simulação</summary>
+      <div class="note" style="margin-top:8px;">
+        • A pontuação oficial usa a <b>mediana mensal</b> do grau de cumprimento de cada indicador ao longo do ano — esta ferramenta calcula um "retrato" com os números que você digitar (equivalente a um único mês), útil para planejar melhorias, mas não substitui a apuração oficial.<br><br>
+        • <b>✅ Validados com dados reais do painel</b> (fórmula e números conferidos, batendo exatamente): Acervo Relativo, Tempo Médio Pendentes Líquidos, IAD, % Processos Antigos, Processos Paralisados, SNA, estrutura das Metas Nacionais, e a aplicabilidade das Inspeções Socioeducativas (Fechado/Aberto).<br><br>
+        • <b>⚠️ Ainda sem confirmação com dado real</b> (implementados só a partir do texto oficial, nunca testados contra um caso concreto): SEEU, Medidas Protetivas de Urgência, Satisfação — Balcão Virtual, Fator de Correção (Ouvidoria) e Fator Potencializador (Conciliação).<br><br>
+        • As fórmulas de Inspeções (Prisionais e Socioeducativas) agora seguem a fórmula real da Portaria CNJ nº 471/2025 (Art. 9º, IX e XXV-a) — inspeção atrasada vale meio ponto, e falta total de um mês zera a pontuação. Atenção: essa Portaria regula um prêmio diferente (Prêmio CNJ de Qualidade, calculado para o Tribunal inteiro, não por unidade) — a fórmula foi adaptada aqui para o nível de vara, com periodicidade mensal, como a própria Resolução 49/2026 exige.<br><br>
+        • Os <b>critérios de cumprimento de cada Meta Nacional do CNJ</b> (o que faz a Meta 5, 8, 10 etc. serem "cumpridas") não estão na Resolução 49/2026 — são definidos anualmente pelo CNJ à parte. Aqui você só marca manualmente se cumpriu ou não.<br><br>
+        • Cláusulas de Barreira, agrupamentos de Cejusc/Napem e pesos de produtividade individual (Anexos III, IV, IX e X) estão em planilhas externas não incluídas no PDF da Resolução.<br><br>
+        • Esta calculadora cobre os indicadores de <b>Varas/Juizados/Turmas Recursais</b>. Cejusc, Napem, Contadoria e Cartórios Unificados têm regras próprias (Anexos III, IV, V e VIII) não incluídas aqui — posso adicionar se você precisar.
+      </div>
+    </details>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <div id="selo_badge" class="selo-badge" style="background:#8a97a6;">Sem Selo</div>
+      <div class="big-pct" id="pct_final">0,0%</div>
+      <div class="sub">Pontuação Relativa Final (escala 0–100)</div>
+      <div class="bar-wrap">
+        <div class="goal-row">
+          <div class="goal-mark" id="goalmark_prata" style="left:80%">🥈<span class="goal-pct">80</span></div>
+          <div class="goal-mark" id="goalmark_diamante" style="left:95%">💎<span class="goal-pct">95</span></div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="bar_fill" style="width:0%"></div>
+          <div class="bar-tick" style="left:80%"></div>
+          <div class="bar-tick" style="left:90%"></div>
+          <div class="bar-tick" style="left:95%"></div>
+          <div class="bar-tick" style="left:98%"></div>
+        </div>
+        <div class="goal-row">
+          <div class="goal-mark" id="goalmark_ouro" style="left:90%">🥇<span class="goal-pct">90</span></div>
+          <div class="goal-mark" id="goalmark_excelencia" style="left:98%">🏆<span class="goal-pct">98</span></div>
+        </div>
+        <div class="marks">
+          <span style="left:0%">0</span>
+        </div>
+      </div>
+
+      <div class="totals">
+        <div><span>🎯 Pontuação Definida</span><b id="budget_sidebar_show">não definido</b></div>
+        <div><span>Pontos obtidos</span><b id="sum_obt">0</b></div>
+        <div><span>Pontos máximos aplicáveis</span><b id="sum_max">0</b></div>
+        <div><span>% base (antes de fatores)</span><b id="pct_base">0%</b></div>
+        <div><span>Fator de correção (Ouvidoria)</span><b id="fator_show">0%</b></div>
+        <div><span>Potencializador (conciliação)</span><b id="pot_show">+0 p.p.</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:.95rem;">Próximo selo</h2>
+      <div class="selo-row">
+        <div class="selo-mini" id="badge_prata" data-tier="prata"><span class="selo-mini-icon">🥈</span><span class="selo-mini-label">Prata</span><span class="selo-mini-pct">≥80%</span></div>
+        <div class="selo-mini" id="badge_ouro" data-tier="ouro"><span class="selo-mini-icon">🥇</span><span class="selo-mini-label">Ouro</span><span class="selo-mini-pct">≥90%</span></div>
+        <div class="selo-mini" id="badge_diamante" data-tier="diamante"><span class="selo-mini-icon">💎</span><span class="selo-mini-label">Diamante</span><span class="selo-mini-pct">≥95%</span></div>
+        <div class="selo-mini" id="badge_excelencia" data-tier="excelencia"><span class="selo-mini-icon">🏆</span><span class="selo-mini-label">Excelência</span><span class="selo-mini-pct">≥98%</span></div>
+      </div>
+      <div id="next_selo" style="font-size:.85rem;color:var(--muted);margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:.95rem;">O que melhorar primeiro</h2>
+      <div id="recs"></div>
+      <button type="button" class="toggle-clear" style="margin-top:10px;width:100%;" onclick="exportarSugestoesPDF()">📄 Exportar sugestões em PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="danger-zone">
+  <p>Apaga todos os dados preenchidos e salvos neste navegador. Esta ação não pode ser desfeita.</p>
+  <button class="btn-danger" onclick="clearAll()">🗑️ Limpar tudo</button>
+  <p style="margin-top:18px;">Se esta página não estiver mostrando a versão mais recente publicada (mesmo depois de atualizar), use o botão abaixo. Ele ignora qualquer cópia salva em cache pelo navegador — mas também apaga os dados salvos aqui, então prefira o F5 normal no dia a dia.</p>
+  <button class="btn-danger" onclick="forcarAtualizacaoCompleta()">🔄 Forçar atualização completa (ignora o cache)</button>
+</div>
+
+<footer>
+  Ferramenta não-oficial de simulação — TJPB, Resolução nº 49/2026. Confirme sempre os resultados publicados oficialmente pela Gerência de Planejamento.<br>
+  Ferramenta independente, sem vínculo oficial.
+</footer>
+
+<div id="print_recs" class="print-only"></div>
+
+<script>
+function els(id){return document.getElementById(id);}
+function num(id){const v=parseFloat(els(id).value); return isNaN(v)?0:v;}
+function chk(id){return els(id).checked;}
+function fmt(n,d=1){ if(!isFinite(n)) n=0; return n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+
+function calc(){
+  const details = []; // {name, obtained, max, suggestion}
+  const summaries = {}; // {cardKey: {applies, value, pts, max}} — usado no resumo do card recolhido
+
+  // ---- Acervo Relativo ----
+  {
+    const cp = num('ar_cp'), cn1=num('ar_cn1'), cn2=num('ar_cn2'), cn3=num('ar_cn3');
+    const cnAvg = (cn1+cn2+cn3)/3;
+    const cb = num('ar_cb');
+    let ar = 0;
+    if(cnAvg>0) ar = (cp/cnAvg) * (1 + Math.log10(cnAvg));
+    els('ar_val').textContent = fmt(ar,2);
+    let pts=0;
+    const altOn = chk('ar_alt'); const prev = num('ar_prev');
+    if(cb>0 && ar<=cb) pts=100;
+    else if(altOn && prev>0 && ar<=prev*0.9) pts=80;
+    else if(cb>0 && ar>0) pts=clamp((cb/ar)*100,0,100);
+    els('ar_pts').textContent = fmt(pts,1);
+    summaries.ar = {applies: chk('ar_apl'), value:`AR ${fmt(ar,2)}`, pts, max:100};
+
+    // CP ideal para bater a Cláusula de Barreira (100 pontos), mantendo os Casos Novos como estão
+    const idealHint = els('ar_ideal_hint');
+    if(cnAvg>0 && cb>0){
+      const fator = 1 + Math.log10(cnAvg);
+      const cpIdeal = cb * cnAvg / fator;
+      const diff = cp - cpIdeal;
+      idealHint.innerHTML = `<span>CP ideal p/ pontuação máxima (mantendo os Casos Novos atuais): <b>até ${fmt(cpIdeal,0)}</b></span>` +
+        (diff>0.5 ? `<span>Você precisa baixar <b>${fmt(diff,0)}</b> processos pendentes a mais.</span>` : `<span style="color:var(--teal-dark);font-weight:600;">✓ Seu CP já atinge a pontuação máxima</span>`);
+    } else {
+      idealHint.innerHTML = `<span style="color:var(--muted);">Preencha os Casos Novos (anos 1-3) e a Cláusula de Barreira para ver o CP ideal.</span>`;
+    }
+
+    if(chk('ar_apl')) details.push({name:'Acervo Relativo', cardId:'card_ar', obtained:pts, max:100,
+      suggestion:`AR atual: ${fmt(ar,2)}. Para pontuação máxima, reduza o CP para até ${cnAvg>0 && cb>0 ? fmt(cb*cnAvg/(1+Math.log10(cnAvg)),0) : '—'} (CP ideal, com os Casos Novos atuais) — ou reduza para AR ≤ ${fmt(cb,2)} (CB do grupo) por qualquer combinação de CP/Casos Novos.`});
+  }
+
+  // ---- Tempo Médio ----
+  {
+    const tp = num('tp_val'), cb = num('tp_cb');
+    let pts=0;
+    if(cb>0 && tp<=cb) pts=115;
+    else if(cb>0 && tp>0) pts=clamp((cb/tp)*115,0,115);
+    els('tp_pts').textContent = fmt(pts,1);
+    summaries.tp = {applies: chk('tp_apl'), value: tp>0?`${fmt(tp,0)} dias`:'—', pts, max:115};
+    if(chk('tp_apl')) details.push({name:'Tempo Médio Pendentes Líquidos', cardId:'card_tp', obtained:pts, max:115,
+      suggestion:`Tempo atual: ${fmt(tp,0)} dias. Reduza para até ${fmt(cb,0)} dias (CB do grupo) para pontuação máxima — priorize sentenciar/baixar os processos mais antigos primeiro.`});
+  }
+
+  // ---- IAD ----
+  {
+    const b=num('iad_baixados'), n=num('iad_novos');
+    const iad = n>0? b/n : 0;
+    els('iad_val').textContent = fmt(iad*100,1)+'%';
+    const pts = clamp(iad,0,1)*20;
+    els('iad_pts').textContent = fmt(pts,1);
+    summaries.iad = {applies: chk('iad_apl'), value:`IAD ${fmt(iad*100,1)}%`, pts, max:20};
+    if(chk('iad_apl')) details.push({name:'Índice de Atendimento à Demanda', cardId:'card_iad', obtained:pts, max:20,
+      suggestion:`IAD atual: ${fmt(iad*100,1)}%. Baixe ao menos a mesma quantidade de processos que ingressam (IAD ≥ 100%) para pontuação máxima.`});
+  }
+
+  // ---- Metas ----
+  {
+    let max=0, obt=0; const pend=[];
+    document.querySelectorAll('.meta_apl').forEach(cb=>{
+      const id=cb.dataset.id;
+      const pt = {m2:15,m5:15,m8:10,m4:5,m6:5,m7:5,m10:5}[id];
+      if(cb.checked){
+        max+=pt;
+        const okBox = document.querySelector(`.meta_ok[data-id="${id}"]`);
+        if(okBox.checked) obt+=pt; else pend.push(id.toUpperCase());
+      }
+    });
+    els('metas_max').textContent = max;
+    els('metas_pts').textContent = obt;
+    const metasAplCount = document.querySelectorAll('.meta_apl:checked').length;
+    const metasOkCount = Array.from(document.querySelectorAll('.meta_apl:checked')).filter(cb=>document.querySelector(`.meta_ok[data-id="${cb.dataset.id}"]`).checked).length;
+    summaries.metas = {applies: chk('metas_apl'), value:`${metasOkCount}/${metasAplCount} metas cumpridas`, pts:obt, max};
+    if(chk('metas_apl')) details.push({name:'Metas Nacionais do CNJ', cardId:'card_metas', obtained:obt, max:max,
+      suggestion: pend.length? `Metas ainda não cumpridas: ${pend.join(', ')}. Cumprir essas metas soma pontos diretamente.` : 'Todas as metas aplicáveis já cumpridas.'});
+  }
+
+  // ---- % Processos Antigos ----
+  {
+    updateCutoffLabels();
+    const qtd=num('ant_qtd'), total=num('ant_total'), cb=num('ant_cb');
+    const pct = total>0 ? (qtd/total*100) : 0;
+    els('ant_pct_show').textContent = fmt(pct,2)+'%';
+
+    let pts=0;
+    if(cb>0 && pct<=cb) pts=35;
+    else if(cb>0 && pct>0) pts=clamp((cb/pct)*35,0,35);
+    els('ant_pts').textContent = fmt(pts,1);
+    summaries.antigos = {applies: chk('ant_apl'), value:`${fmt(pct,2)}% antigos`, pts, max:35};
+
+    const idealHint = els('ant_ideal_hint');
+    if(total>0 && cb>0){
+      const qtdIdeal = cb/100*total;
+      const diff = qtd - qtdIdeal;
+      idealHint.innerHTML = `<span>Quantidade ideal de processos antigos p/ pontuação máxima: <b>até ${fmt(qtdIdeal,0)}</b></span>` +
+        (diff>0.5 ? `<span>Você precisa baixar <b>${fmt(diff,0)}</b> processos antigos a mais.</span>` : `<span style="color:var(--teal-dark);font-weight:600;">✓ Sua quantidade já atinge a pontuação máxima</span>`);
+    } else {
+      idealHint.innerHTML = `<span style="color:var(--muted);">Preencha "Processos Ativos" e a Cláusula de Barreira para ver a quantidade ideal.</span>`;
+    }
+
+    if(chk('ant_apl')) details.push({name:'% Processos Antigos', cardId:'card_antigos', obtained:pts, max:35,
+      suggestion: total>0 && cb>0
+        ? `${fmt(pct,2)}% (${fmt(qtd,0)} de ${fmt(total,0)}) são antigos. Baixe processos antigos até restarem no máximo ${fmt(cb/100*total,0)} (≈${fmt(cb,2)}%, a CB do grupo).`
+        : `% atual: ${fmt(pct,2)}%. Baixe processos antigos até ficar em ${fmt(cb,2)}% ou menos (CB do grupo).`});
+  }
+
+  // ---- Paralisados ----
+  {
+    const qtd=num('par_qtd'), tpa=num('par_total');
+    const ok = clamp(tpa-qtd, 0, tpa); // processos em dia = total - parados
+    els('par_ok_show').textContent = fmt(ok,0);
+    const pctPar = tpa>0? (qtd/tpa)*100 : 0;
+    els('par_pctshow').textContent = fmt(pctPar,2)+'%';
+    const pts = tpa>0 ? (ok/tpa)*50 : 0;
+    els('par_pts').textContent = fmt(pts,1);
+    summaries.paralisados = {applies: chk('par_apl'), value:`${fmt(pctPar,2)}% parados`, pts, max:50};
+    if(chk('par_apl')) details.push({name:'Processos Paralisados >90 dias', cardId:'card_paralisados', obtained:pts, max:50,
+      suggestion:`${fmt(pctPar,2)}% dos processos ativos estão parados há mais de 90 dias (${fmt(qtd,0)} de ${fmt(tpa,0)}). Movimente-os (mesmo despachos de mero expediente contam) para chegar perto de 0%.`});
+  }
+
+  // ---- Balcao Virtual ----
+  {
+    const pct = num('bv_pct');
+    const pts = clamp(pct/90,0,1)*20;
+    els('bv_pts').textContent = fmt(pts,1);
+    summaries.balcao = {applies: chk('bv_apl'), value:`${fmt(pct,1)}% positivas`, pts, max:20};
+    if(chk('bv_apl')) details.push({name:'Satisfação Balcão Virtual', cardId:'card_balcao', obtained:pts, max:20,
+      suggestion:`% positivas atual: ${fmt(pct,1)}%. Atinja 90% de avaliações positivas (notas 4-5) para pontuação máxima.`});
+  }
+
+  // ---- SEEU ----
+  {
+    const tipo = els('seeu_tipo').value;
+    const max = tipo==='pura'?100:70;
+    els('seeu_max').textContent = max;
+    let obt=0, total=0, checkedCount=0;
+    const seeuBoxes = document.querySelectorAll('.seeu_ok');
+    seeuBoxes.forEach(cb=>{
+      const pt = tipo==='pura'? parseInt(cb.dataset.pura): parseInt(cb.dataset.mista);
+      total+=pt;
+      if(cb.checked){ obt+=pt; checkedCount++; }
+    });
+    els('seeu_pts').textContent = obt;
+    summaries.seeu = {applies: chk('seeu_apl'), value:`${checkedCount}/${seeuBoxes.length} critérios (${tipo==='pura'?'PURA':'MISTA'})`, pts:obt, max};
+    if(chk('seeu_apl')) details.push({name:'SEEU (Execução Penal)', cardId:'card_seeu', obtained:obt, max:max,
+      suggestion: obt<max? 'Zere pendências de incidentes, guias e juntadas no SEEU há mais de 30 dias para pontuar os critérios restantes.':'Todos os critérios do SEEU atendidos.'});
+  }
+
+  // ---- Medida Protetiva ----
+  {
+    const t = num('mp_tempo');
+    const pts = (t>0 && t<=2)?10:0;
+    els('mp_pts').textContent = pts;
+    summaries.protetiva = {applies: chk('mp_apl'), value: t>0?`${fmt(t,1)} dias`:'—', pts, max:10};
+    if(chk('mp_apl')) details.push({name:'Medidas Protetivas de Urgência', cardId:'card_protetiva', obtained:pts, max:10,
+      suggestion:`Tempo médio atual: ${fmt(t,1)} dias. É preciso decidir (conceder ou denegar) em até 2 dias para pontuar (critério binário — não há pontuação parcial prevista na Resolução).`});
+  }
+
+  // ---- SNA ----
+  {
+    const noneMode = chk('sna_none');
+    els('sna_fields').style.display = noneMode? 'none':'grid';
+    const pct = num('sna_pct');
+    let pts=0;
+    if(noneMode) pts=30;
+    else if(pct>=98) pts=30; else if(pct>=90) pts=15;
+    els('sna_pts').textContent = pts;
+    summaries.sna = {applies: chk('sna_apl'), value: noneMode? 'sem pendências' : `${fmt(pct,1)}% reavaliação`, pts, max:30};
+    if(chk('sna_apl')) details.push({name:'Reavaliação de Acolhimento (SNA)', cardId:'card_sna', obtained:pts, max:30,
+      suggestion: noneMode ? 'Sem acolhimentos pendentes de reavaliação — pontuação cheia mantida.' : `% atual: ${fmt(pct,1)}%. Abaixo de 90% = 0 pts; 90–98% = 15 pts; ≥98% = 30 pts. Priorize reavaliar os acolhimentos mais antigos no SNA.`});
+  }
+
+  // Fórmula adaptada da Portaria CNJ 471/2025 (Art. 9º, IX e XXV-a):
+  // inspeção fora do prazo vale metade do peso de uma no prazo; falta total zera tudo.
+  function inspecaoPontos(noPrazo, foraPrazo, faltou, max){
+    if(faltou) return 0;
+    const efetivo = clamp(noPrazo,0,12) + clamp(foraPrazo,0,12)/2;
+    return clamp((efetivo/12)*max, 0, max);
+  }
+
+  // ---- Inspecoes prisionais ----
+  {
+    const tipo = els('ip_tipo').value;
+    const max = tipo==='vep'?15:10;
+    els('ip_max').textContent = max;
+    const noPrazo = clamp(num('ip_no_prazo'),0,12), foraPrazo = clamp(num('ip_fora_prazo'),0,12);
+    const faltou = chk('ip_faltou');
+    const pts = inspecaoPontos(noPrazo, foraPrazo, faltou, max);
+    els('ip_pts').textContent = fmt(pts,1);
+    summaries.insp_prisionais = {applies: chk('ip_apl'), value: faltou? 'mês faltante (zera)' : `${noPrazo}/12 no prazo, ${foraPrazo} atrasados`, pts, max};
+    if(chk('ip_apl')) details.push({name:'Inspeções Estab. Prisionais', cardId:'card_insp_prisionais', obtained:pts, max:max,
+      suggestion: faltou ? 'Há um mês sem nenhuma inspeção lançada — isso zera a pontuação (regra da Portaria CNJ 471/2025). Regularize o CNIEP.' : `${noPrazo}/12 meses no prazo, ${foraPrazo} atrasados. Lance a inspeção no CNIEP até o dia 5 de cada mês subsequente para não perder pontos.`});
+  }
+
+  // ---- Inspecoes socioeducativas ----
+  {
+    const fechadoApl = chk('is_fechado_apl'), abertoApl = chk('is_aberto_apl');
+    const isMax = (fechadoApl?5:0) + (abertoApl?5:0);
+    const fechadoPts = fechadoApl ? inspecaoPontos(num('is_fechado_no_prazo'), num('is_fechado_fora_prazo'), chk('is_fechado_faltou'), 5) : 0;
+    const abertoPts = abertoApl ? inspecaoPontos(num('is_aberto_no_prazo'), num('is_aberto_fora_prazo'), chk('is_aberto_faltou'), 5) : 0;
+    const pts = fechadoPts + abertoPts;
+    els('is_pts').textContent = fmt(pts,1);
+    els('is_max_show').textContent = isMax;
+    els('is_max_label').textContent = isMax>0 ? `até ${isMax} pontos` : 'até 10 pontos (5+5)';
+    const parts=[];
+    if(fechadoApl) parts.push(chk('is_fechado_faltou') ? 'Meio Fechado: zerado (mês faltante)' : `Meio Fechado: ${fmt(fechadoPts,1)}/5 pts`);
+    if(abertoApl) parts.push(chk('is_aberto_faltou') ? 'Meio Aberto: zerado (mês faltante)' : `Meio Aberto: ${fmt(abertoPts,1)}/5 pts`);
+    summaries.insp_socio = {applies: chk('is_apl'), value: parts.length? parts.join(' · ') : 'nenhuma competência marcada', pts, max:isMax};
+    if(chk('is_apl')) details.push({name:'Inspeções Socioeducativas', cardId:'card_insp_socio', obtained:pts, max:isMax,
+      suggestion: parts.length ? `${parts.join(' · ')}. Lance no CNIUPS até o dia 10 do mês subsequente.` : 'Marque qual competência (Meio Fechado e/ou Aberto) se aplica à sua unidade.'});
+  }
+
+  // ---- Totais ----
+  let sumObt=0, sumMaxCalc=0;
+  details.forEach(d=>{ sumObt+=d.obtained; sumMaxCalc+=d.max; });
+
+  const maxOficial = num('max_oficial');
+  const sumMax = maxOficial>0 ? maxOficial : sumMaxCalc; // usado em todo o restante do cálculo
+
+  const checkEl = els('max_oficial_check');
+  const oficialBar = els('oficial_bar_fill');
+  let budgetSidebarText, budgetSidebarColor;
+  if(maxOficial>0){
+    const diff = maxOficial - sumMaxCalc;
+    const barPct = clamp((sumMaxCalc/maxOficial)*100, 0, 100);
+    oficialBar.style.width = barPct+'%';
+    if(Math.abs(diff) < 0.01){
+      checkEl.innerHTML = `<span style="color:var(--teal-dark);font-weight:600;">✓ Bate certinho: ${fmt(sumMaxCalc,1)} pts nos indicadores marcados = ${fmt(maxOficial,1)} oficial.</span>`;
+      oficialBar.style.background = 'var(--teal)';
+      budgetSidebarText = `${fmt(sumMaxCalc,1)} / ${fmt(maxOficial,1)} ✓`; budgetSidebarColor='var(--teal-dark)';
+    } else if(diff > 0){
+      checkEl.innerHTML = `<span style="color:var(--warn);font-weight:600;">⚠ Faltam ${fmt(diff,1)} pts: você marcou ${fmt(sumMaxCalc,1)} de ${fmt(maxOficial,1)} oficiais — confira se esqueceu de marcar algum indicador como aplicável.</span>`;
+      oficialBar.style.background = 'var(--warn)';
+      budgetSidebarText = `${fmt(sumMaxCalc,1)} / ${fmt(maxOficial,1)} (restam ${fmt(diff,1)})`; budgetSidebarColor='var(--warn)';
+    } else {
+      checkEl.innerHTML = `<span style="color:var(--bad);font-weight:600;">⚠ ${fmt(-diff,1)} pts a mais: você marcou ${fmt(sumMaxCalc,1)}, mas o oficial é ${fmt(maxOficial,1)} — confira se marcou algum indicador que não se aplica à sua unidade.</span>`;
+      oficialBar.style.background = 'var(--bad)';
+      budgetSidebarText = `${fmt(sumMaxCalc,1)} / ${fmt(maxOficial,1)} (excedeu ${fmt(-diff,1)})`; budgetSidebarColor='var(--bad)';
+    }
+  } else {
+    checkEl.innerHTML = `<span style="color:var(--muted);">Sem valor oficial informado — usando a soma automática dos indicadores marcados (${fmt(sumMaxCalc,1)} pts).</span>`;
+    oficialBar.style.width='0%';
+    budgetSidebarText = 'não definido'; budgetSidebarColor='var(--muted)';
+  }
+  const budgetEl = els('budget_sidebar_show');
+  if(budgetEl){ budgetEl.textContent = budgetSidebarText; budgetEl.style.color = budgetSidebarColor; }
+
+  updateApplicabilityLocks(maxOficial, sumMaxCalc);
+
+  const pctBase = sumMax>0? (sumObt/sumMax*100):0;
+
+  // Fator de correcao
+  const da20=num('ftc_da20'), dp=num('ftc_dp');
+  let ftc1=0, pctResp=null;
+  if(dp>0){
+    pctResp = da20/dp;
+    ftc1 = ((pctResp/0.95)-1)/100;
+    if(ftc1>0) ftc1=0; // penaliza apenas, conforme texto da resolucao
+  }
+  els('ftc_pctshow').textContent = pctResp!==null? fmt(pctResp*100,1)+'%' : '—';
+  els('ftc_val').textContent = fmt(ftc1*100,3)+'%';
+
+  const pctCorrigida = pctBase*(1+ftc1);
+  const potOn = chk('conc_ok');
+  const pctFinal = pctCorrigida + (potOn?1:0);
+
+  // Resumos dos fatores A/B (não seguem o padrão obtido/máx dos indicadores 1-12)
+  els('sum_conc').innerHTML = potOn
+    ? `<span class="cs-pill cs-good">+1 p.p.</span><span class="cs-value">Meta de conciliação batida</span>`
+    : `<span class="cs-pill cs-muted">+0 p.p.</span><span class="cs-value">Meta de conciliação não batida</span>`;
+  els('sum_ftc').innerHTML = ftc1<0
+    ? `<span class="cs-pill cs-bad">${fmt(ftc1*100,3)}%</span><span class="cs-value">${pctResp!==null?fmt(pctResp*100,1)+'% respondido em 20d':'sem dados'}</span>`
+    : `<span class="cs-pill cs-good">0%</span><span class="cs-value">${pctResp!==null?fmt(pctResp*100,1)+'% respondido em 20d':'sem dados informados'}</span>`;
+
+  els('sum_obt').textContent = fmt(sumObt,1);
+  els('sum_max').textContent = fmt(sumMax,1);
+  els('pct_base').textContent = fmt(pctBase,2)+'%';
+  els('fator_show').textContent = fmt(ftc1*100,2)+'%';
+  els('pot_show').textContent = (potOn? '+1 p.p.' : '+0 p.p.');
+  els('pct_final').textContent = fmt(pctFinal,2)+'%';
+
+  // Selo
+  let selo='Sem Selo', color='#8a97a6';
+  if(pctFinal>=98){selo='Selo Excelência'; color='linear-gradient(135deg,#6a4fd6,#a06de0)';}
+  else if(pctFinal>=95){selo='Selo Diamante'; color='linear-gradient(135deg,#2f8fd6,#59c3e0)';}
+  else if(pctFinal>=90){selo='Selo Ouro'; color='linear-gradient(135deg,#d69f2f,#e0c059)';}
+  else if(pctFinal>=80){selo='Selo Prata'; color='linear-gradient(135deg,#8c98a5,#c3cdd6)';}
+  const badge = els('selo_badge');
+  badge.textContent = selo;
+  badge.style.background = color;
+
+  els('bar_fill').style.width = clamp(pctFinal,0,100)+'%';
+
+  // Proximo selo
+  const thresholds = [{n:80,label:'Prata',tier:'prata'},{n:90,label:'Ouro',tier:'ouro'},{n:95,label:'Diamante',tier:'diamante'},{n:98,label:'Excelência',tier:'excelencia'}];
+  let nextMsg = 'Parabéns, você já está no nível máximo (Excelência)!';
+  let nextTier = null;
+  for(const t of thresholds){
+    const badge = els('badge_'+t.tier);
+    const achieved = pctFinal >= t.n;
+    badge.classList.toggle('achieved', achieved);
+    badge.classList.toggle('next-target', !achieved && nextTier===null);
+    const goalMark = els('goalmark_'+t.tier);
+    if(goalMark) goalMark.classList.toggle('achieved', achieved);
+    if(!achieved && nextTier===null){
+      nextTier = t;
+      const gapPct = t.n - pctFinal;
+      const gapPts = sumMax>0? (gapPct/100*sumMax) : 0;
+      nextMsg = `Faltam <b>${fmt(gapPct,2)} p.p.</b> (≈ ${fmt(gapPts,1)} pontos) para o Selo <b>${t.label}</b> (${t.n}%).`;
+    }
+  }
+  els('next_selo').innerHTML = nextMsg;
+
+  // Recomendacoes
+  const applicable = details.filter(d=>d.max>0);
+  applicable.sort((a,b)=> (b.max-b.obtained) - (a.max-a.obtained));
+  const recDiv = els('recs');
+  recDiv.innerHTML='';
+  const withGap = applicable.filter(d=> (d.max-d.obtained) > 0.05);
+  if(withGap.length===0){
+    recDiv.innerHTML = '<div class="rec">Todos os indicadores aplicáveis já estão no máximo. 🎉</div>';
+  } else {
+    withGap.slice(0,6).forEach(d=>{
+      const gap = d.max-d.obtained;
+      const impact = sumMax>0? (gap/sumMax*100):0;
+      const div = document.createElement('div');
+      div.className='rec';
+      div.tabIndex = 0;
+      div.setAttribute('role','button');
+      div.innerHTML = `<b>${d.name} — faltam ${fmt(gap,1)} pts</b>${d.suggestion} <span class="impact">Impacto: +${fmt(impact,2)} p.p. na pontuação relativa.</span><span class="rec-link">Ver indicador ↗</span>`;
+      if(d.cardId){
+        div.onclick = () => scrollToCard(d.cardId);
+        div.onkeydown = (e) => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); scrollToCard(d.cardId); } };
+      }
+      recDiv.appendChild(div);
+    });
+  }
+
+  renderCardSummaries(summaries);
+  scheduleSave();
+}
+
+// Preenche o resumo de cada card (mostrado quando o card está recolhido) com
+// o essencial: valor apurado + pontos obtidos. O máximo só aparece quando ele
+// varia por card (SEEU, Insp. Prisionais, Insp. Socio, Metas) — nos indicadores
+// de máximo fixo ele já está visível no selo do cabeçalho, então não repetimos.
+const VARIABLE_MAX = new Set(['metas','seeu','insp_prisionais','insp_socio']);
+function renderCardSummaries(summaries){
+  Object.keys(summaries).forEach(key=>{
+    const el = els('sum_'+key);
+    if(!el) return;
+    const s = summaries[key];
+    if(!s.applies){
+      el.innerHTML = `<span class="cs-pill cs-muted">Não aplicável</span>`;
+      return;
+    }
+    if(s.max<=0){
+      el.innerHTML = `<span class="cs-pill cs-muted">0 pts</span><span class="cs-value">Configure os campos deste indicador</span>`;
+      return;
+    }
+    const ratio = s.pts/s.max;
+    const cls = ratio>=0.95 ? 'cs-good' : ratio>=0.6 ? 'cs-warn' : 'cs-bad';
+    const ptsLabel = VARIABLE_MAX.has(key) ? `${fmt(s.pts,1)} / ${fmt(s.max,1)} pts` : `${fmt(s.pts,1)} pts`;
+    el.innerHTML = `<span class="cs-pill ${cls}">${ptsLabel}</span><span class="cs-value">${s.value}</span>`;
+  });
+}
+
+function toggleCard(cardId){
+  const card = els(cardId);
+  if(!card) return;
+  card.classList.toggle('collapsed');
+  scheduleSave();
+}
+
+function collapseAllCards(){
+  document.querySelectorAll('.card.indicator').forEach(c=>c.classList.add('collapsed'));
+  scheduleSave();
+}
+
+function expandAllCards(){
+  document.querySelectorAll('.card.indicator').forEach(c=>c.classList.remove('collapsed'));
+  scheduleSave();
+}
+
+// Resolve CNavg (média do triênio) numericamente dado CP e um AR alvo,
+// invertendo AR = (CP/CNavg) × (1 + log10(CNavg)) por bisseção (função decrescente em CNavg>0).
+function solveCnAvgFromArCp(cp, arTarget){
+  if(cp<=0 || arTarget<=0) return null;
+  // domínio útil: x>=1 (evita a faixa x<1 onde log10(x)<0 inverte o sinal da função)
+  let lo=1, hi=1e8;
+  const f = x => (cp/x)*(1+Math.log10(x)) - arTarget;
+  let flo = f(lo);
+  if(!(flo>0)) return null; // CP muito pequeno para o AR informado — fora da faixa esperada
+  for(let i=0;i<200;i++){
+    const mid=(lo+hi)/2;
+    const fm=f(mid);
+    if(Math.abs(fm)<1e-9) return mid;
+    if(fm>0) lo=mid; else hi=mid;
+  }
+  return (lo+hi)/2;
+}
+
+function fillCnFromAr(){
+  const cp = num('ar_cp');
+  const target = num('ar_reverse_target');
+  const cnAtual = num('ar_cn1');
+  if(cp<=0){ flashStatus('Preencha o CP atual antes.'); return; }
+  if(target<=0){ flashStatus('Informe o AR do painel antes.'); return; }
+  const cnAvg = solveCnAvgFromArCp(cp, target);
+  if(cnAvg===null){ flashStatus('Não foi possível calcular com esses valores.'); return; }
+  const totalTrienio = cnAvg*3;
+  const remaining = Math.max(0, totalTrienio - cnAtual);
+  const each = remaining/2;
+  els('ar_cn2').value = Math.round(each);
+  els('ar_cn3').value = Math.round(each);
+  calc();
+  flashStatus(`Média do triênio: ${fmt(cnAvg,1)}. Anos anteriores estimados em ${Math.round(each)} cada (distribuição igual — ajuste se souber os valores reais).`);
+}
+
+function fillAntQtdFromPct(){
+  const total = num('ant_total');
+  const target = num('ant_reverse_target');
+  if(total<=0){ flashStatus('Preencha "Processos Ativos" antes.'); return; }
+  if(target<=0){ flashStatus('Informe a % do painel antes.'); return; }
+  const qtd = target/100*total;
+  els('ant_qtd').value = Math.round(qtd);
+  calc();
+  flashStatus(`Quantidade preenchida: ${Math.round(qtd)} (a partir da % ${fmt(target,2)}).`);
+}
+
+function fillFtcFromPct(){
+  const target = num('ftc_reverse_target');
+  if(target<=0){ flashStatus('Informe a % do painel antes.'); return; }
+  let dp = num('ftc_dp');
+  if(dp<=0){ dp=100; els('ftc_dp').value=100; }
+  const da20 = target/100*dp;
+  els('ftc_da20').value = Math.round(da20*100)/100;
+  calc();
+  flashStatus(`Quantidade "respondidas em 20 dias" preenchida: ${fmt(da20,2)} (a partir da % ${fmt(target,2)}).`);
+}
+
+function resetAplicabilidade(){
+  ['ar_apl','tp_apl','iad_apl','metas_apl','ant_apl','par_apl','bv_apl','seeu_apl','mp_apl','sna_apl','ip_apl','is_apl'].forEach(id=>{
+    els(id).checked = false;
+  });
+  document.querySelectorAll('.meta_apl').forEach(cb=>{ cb.checked=false; });
+  els('is_fechado_apl').checked = false;
+  els('is_aberto_apl').checked = false;
+  calc();
+  flashStatus('Aplicabilidade de todos os indicadores foi desmarcada — os números que você digitou continuam salvos.');
+}
+
+// Preenche de uma vez os dois seletores de "tipo de vara" (SEEU e Inspeções
+// Prisionais) que, na Resolução, pedem a mesma informação (vara privativa de
+// execução penal ou não) com rótulos diferentes em cada card.
+function syncTipoVara(){
+  const val = els('tipo_vara_shared').value;
+  if(val === 'privativa'){
+    els('seeu_tipo').value = 'pura';
+    els('ip_tipo').value = 'vep';
+  } else if(val === 'mista'){
+    els('seeu_tipo').value = 'mista';
+    els('ip_tipo').value = 'outras';
+  }
+  calc();
+  if(val) flashStatus('Tipo de vara aplicado ao SEEU (card 8) e às Inspeções Prisionais (card 11).');
+}
+
+function updateCutoffLabels(){
+  const y = num('ant_cutoff_year');
+  if(y>0){
+    els('ant_cutoff_label').textContent = y;
+    els('ant_cutoff_next_label').textContent = y+1;
+  }
+}
+
+// Impede marcar mais indicadores "aplicável" do que a Pontuação Máxima Oficial permite.
+// Só restringe caixas ainda DESMARCADAS cujo peso ultrapassaria o restante do orçamento —
+// nunca desabilita uma caixa já marcada (o usuário sempre pode desmarcar).
+function lockToggle(id, weight, remaining){
+  const el = els(id);
+  if(!el || el.checked){ if(el){ el.disabled=false; el.title=''; } return; }
+  const wouldExceed = weight > remaining + 0.001;
+  el.disabled = wouldExceed;
+  el.title = wouldExceed
+    ? `Marcar isto somaria +${fmt(weight,1)} pts, mas só restam ${fmt(remaining,1)} pts até a Pontuação Máxima Oficial. Desmarque outro indicador antes, ou ajuste o valor oficial.`
+    : '';
+}
+
+// Trava opções de <select> (ex.: SEEU PURA/MISTA, Insp. Prisionais VEP/demais) que
+// aumentariam o peso do indicador além do orçamento restante. Nunca desabilita a opção
+// já selecionada — só impede escolher outra que ultrapassaria o limite.
+function lockSelectOptions(selectId, aplId, weightsMap, remaining){
+  const sel = els(selectId);
+  const currentVal = sel.value;
+  const currentWeight = chk(aplId) ? (weightsMap[currentVal]||0) : 0;
+  const budget = remaining + currentWeight; // orçamento "sem contar" a opção atual
+  Array.from(sel.options).forEach(opt=>{
+    if(opt.value===currentVal){ opt.disabled=false; return; }
+    const w = weightsMap[opt.value];
+    const exceed = w > budget + 0.001;
+    opt.disabled = exceed;
+  });
+}
+
+function updateApplicabilityLocks(maxOficial, sumMaxCalc){
+  const mainIds = ['ar_apl','tp_apl','iad_apl','ant_apl','par_apl','bv_apl','seeu_apl','mp_apl','sna_apl','ip_apl','metas_apl','is_apl'];
+  if(!(maxOficial>0)){
+    mainIds.forEach(id=>{ const el=els(id); if(el){ el.disabled=false; el.title=''; } });
+    document.querySelectorAll('.meta_apl, #is_fechado_apl, #is_aberto_apl').forEach(el=>{ el.disabled=false; el.title=''; });
+    Array.from(els('seeu_tipo').options).forEach(o=>o.disabled=false);
+    Array.from(els('ip_tipo').options).forEach(o=>o.disabled=false);
+    return;
+  }
+
+  const remaining = maxOficial - sumMaxCalc;
+  const seeuW = els('seeu_tipo').value==='pura' ? 100 : 70;
+  const ipW = els('ip_tipo').value==='vep' ? 15 : 10;
+  lockSelectOptions('seeu_tipo', 'seeu_apl', {pura:100, mista:70}, remaining);
+  lockSelectOptions('ip_tipo', 'ip_apl', {vep:15, outras:10}, remaining);
+  const metaWeights = {m2:15,m5:15,m8:10,m4:5,m6:5,m7:5,m10:5};
+  let metasCheckedSum = 0;
+  document.querySelectorAll('.meta_apl').forEach(cb=>{ if(cb.checked) metasCheckedSum += metaWeights[cb.dataset.id]; });
+  const socioCheckedSum = (chk('is_fechado_apl')?5:0) + (chk('is_aberto_apl')?5:0);
+
+  lockToggle('ar_apl', 100, remaining);
+  lockToggle('tp_apl', 115, remaining);
+  lockToggle('iad_apl', 20, remaining);
+  lockToggle('ant_apl', 35, remaining);
+  lockToggle('par_apl', 50, remaining);
+  lockToggle('bv_apl', 20, remaining);
+  lockToggle('seeu_apl', seeuW, remaining);
+  lockToggle('mp_apl', 10, remaining);
+  lockToggle('sna_apl', 30, remaining);
+  lockToggle('ip_apl', ipW, remaining);
+  lockToggle('metas_apl', metasCheckedSum, remaining);
+  lockToggle('is_apl', socioCheckedSum, remaining);
+
+  // Sub-itens só ficam sujeitos à trava quando o indicador "pai" já está aplicável
+  // (senão marcá-los ainda não muda o total, então não há por que travar).
+  const metasOn = chk('metas_apl');
+  document.querySelectorAll('.meta_apl').forEach(cb=>{
+    if(!metasOn || cb.checked){ cb.disabled=false; cb.title=''; return; }
+    const w = metaWeights[cb.dataset.id];
+    const exceed = w > remaining + 0.001;
+    cb.disabled = exceed;
+    cb.title = exceed ? `Marcar esta meta somaria +${w} pts, mas só restam ${fmt(remaining,1)} pts até o oficial.` : '';
+  });
+
+  const isOn = chk('is_apl');
+  ['is_fechado_apl','is_aberto_apl'].forEach(id=>{
+    const cb = els(id);
+    if(!isOn){ cb.disabled=false; cb.title=''; return; }
+    if(cb.checked){ cb.disabled=false; cb.title=''; return; }
+    const exceed = 5 > remaining + 0.001;
+    cb.disabled = exceed;
+    cb.title = exceed ? `Marcar isto somaria +5 pts, mas só restam ${fmt(remaining,1)} pts até o oficial.` : '';
+  });
+}
+
+function scrollToCard(cardId){
+  const el = els(cardId);
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+  el.classList.remove('flash-highlight');
+  void el.offsetWidth; // reinicia a animação mesmo se clicado 2x seguidas
+  el.classList.add('flash-highlight');
+  setTimeout(()=> el.classList.remove('flash-highlight'), 1600);
+}
+
+function fillCpFromAr(){
+  const cn1=num('ar_cn1'), cn2=num('ar_cn2'), cn3=num('ar_cn3');
+  const cnAvg = (cn1+cn2+cn3)/3;
+  const target = num('ar_reverse_target');
+  if(cnAvg<=0){
+    flashStatus('Preencha os Casos Novos (anos 1, 2 e 3) antes de preencher o CP.');
+    return;
+  }
+  if(target<=0){
+    flashStatus('Informe o AR conhecido (do painel) para calcular o CP.');
+    return;
+  }
+  const fator = 1 + Math.log10(cnAvg);
+  const cp = target * cnAvg / fator;
+  els('ar_cp').value = Math.round(cp);
+  calc();
+  flashStatus(`CP preenchido: ${Math.round(cp)} (a partir do AR ${fmt(target,2)}).`);
+}
+
+function clearAll(){
+  document.querySelectorAll('input[type=number]').forEach(i=>i.value='');
+  document.querySelectorAll('input[type=checkbox]').forEach(i=>{
+    if(['ar_apl','tp_apl','iad_apl','metas_apl','ant_apl','par_apl'].includes(i.id)) i.checked=true;
+    else i.checked=false;
+  });
+  document.querySelectorAll('.meta_apl').forEach(cb=>{ cb.checked = ['m2','m5','m8','m4','m10'].includes(cb.dataset.id); });
+  expandAllCards();
+  localStorage.removeItem(STORAGE_KEY);
+  calc();
+  flashStatus('Dados limpos.');
+}
+
+// Gera uma versão para impressão do card "O que melhorar primeiro" e abre o
+// diálogo de impressão do navegador — de lá, o usuário escolhe "Salvar como
+// PDF" no destino. Evita depender de bibliotecas externas.
+function exportarSugestoesPDF(){
+  const recDiv = els('recs');
+  const printArea = els('print_recs');
+  if(!recDiv || !printArea) return;
+  const now = new Date();
+  const dataStr = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  const seloTxt = els('selo_badge') ? els('selo_badge').textContent.trim() : '';
+  const pctTxt = els('pct_final') ? els('pct_final').textContent.trim() : '';
+
+  let html = `<h1>O que melhorar primeiro — Calculadora de Selos TJPB</h1>`;
+  html += `<div class="print-meta">Gerado em ${dataStr} · Situação atual: <b>${seloTxt}</b> (${pctTxt}) · Simulação não-oficial baseada na Resolução nº 49/2026 — confirme sempre com a Gerência de Planejamento.</div>`;
+
+  const recCards = recDiv.querySelectorAll('.rec');
+  if(recCards.length === 0){
+    html += `<p>Nenhuma sugestão disponível no momento — preencha os indicadores na calculadora para gerar recomendações.</p>`;
+  } else {
+    recCards.forEach(rec=>{
+      const clone = rec.cloneNode(true);
+      clone.removeAttribute('onclick');
+      clone.removeAttribute('onkeydown');
+      clone.removeAttribute('tabindex');
+      clone.removeAttribute('role');
+      clone.classList.remove('rec');
+      clone.classList.add('rec-print');
+      const link = clone.querySelector('.rec-link');
+      if(link) link.remove();
+      html += clone.outerHTML;
+    });
+  }
+  printArea.innerHTML = html;
+
+  document.body.classList.add('printing-recs');
+  window.print();
+}
+window.addEventListener('afterprint', ()=>{ document.body.classList.remove('printing-recs'); });
+
+// Força um recarregamento que ignora qualquer cópia em cache (do navegador
+// ou de CDN) anexando um parâmetro único à URL — diferente do F5 normal,
+// que mantém os dados salvos. Aqui os dados são apagados de propósito, para
+// garantir que a próxima carga reflita 100% a versão publicada mais recente.
+function forcarAtualizacaoCompleta(){
+  if(!confirm('Isso vai apagar os dados salvos neste navegador e recarregar a página ignorando qualquer cópia em cache. Continuar?')) return;
+  clearTimeout(saveTimer); // cancela qualquer salvamento automático pendente, senão ele pode "ressuscitar" os dados durante a navegação
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  const base = location.href.split('?')[0].split('#')[0];
+  location.href = base + '?v=' + Date.now();
+}
+
+// ---- Persistência local (localStorage) ----
+const STORAGE_KEY = 'tjpb_selo_calc_v1';
+
+function saveState(){
+  const data = {};
+  document.querySelectorAll('input[type=number]').forEach(el=>{ if(el.id) data[el.id]=el.value; });
+  document.querySelectorAll('input[type=checkbox]').forEach(el=>{ if(el.id) data[el.id]=el.checked; });
+  document.querySelectorAll('input[type=radio]:checked').forEach(el=>{ if(el.name) data['radio_'+el.name]=el.id; });
+  document.querySelectorAll('select').forEach(el=>{ if(el.id) data[el.id]=el.value; });
+  document.querySelectorAll('.meta_apl').forEach(el=>{ data['meta_apl_'+el.dataset.id]=el.checked; });
+  document.querySelectorAll('.meta_ok').forEach(el=>{ data['meta_ok_'+el.dataset.id]=el.checked; });
+  document.querySelectorAll('.seeu_ok').forEach((el,idx)=>{ data['seeu_ok_'+idx]=el.checked; });
+  data.collapsedCards = Array.from(document.querySelectorAll('.card.indicator.collapsed')).map(c=>c.id);
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    flashStatus('Salvo automaticamente neste navegador ✓');
+  }catch(e){ flashStatus('Não foi possível salvar (armazenamento local indisponível).'); }
+}
+
+let saveTimer=null;
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 400);
+}
+
+let flashTimer=null;
+function flashStatus(msg){
+  const el = els('save_status');
+  if(!el) return;
+  el.textContent = msg;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ el.textContent=''; }, 2500);
+}
+
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return false;
+  try{
+    const data = JSON.parse(raw);
+    document.querySelectorAll('input[type=number]').forEach(el=>{ if(el.id && data[el.id]!==undefined) el.value=data[el.id]; });
+    document.querySelectorAll('input[type=checkbox]').forEach(el=>{ if(el.id && data[el.id]!==undefined) el.checked=data[el.id]; });
+    document.querySelectorAll('input[type=radio]').forEach(el=>{
+      const k='radio_'+el.name;
+      if(data[k]!==undefined) el.checked = (el.id===data[k]);
+    });
+    document.querySelectorAll('select').forEach(el=>{ if(el.id && data[el.id]!==undefined) el.value=data[el.id]; });
+    document.querySelectorAll('.meta_apl').forEach(el=>{ const k='meta_apl_'+el.dataset.id; if(data[k]!==undefined) el.checked=data[k]; });
+    document.querySelectorAll('.meta_ok').forEach(el=>{ const k='meta_ok_'+el.dataset.id; if(data[k]!==undefined) el.checked=data[k]; });
+    document.querySelectorAll('.seeu_ok').forEach((el,idx)=>{ const k='seeu_ok_'+idx; if(data[k]!==undefined) el.checked=data[k]; });
+    if(Array.isArray(data.collapsedCards)){
+      data.collapsedCards.forEach(id=>{ const c=els(id); if(c) c.classList.add('collapsed'); });
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
+const wasRestored = loadState();
+if(!els('ant_cutoff_year').value){
+  els('ant_cutoff_year').value = new Date().getFullYear() - 4; // regra atual do CNJ: processos com 4+ anos
+}
+calc();
+if(wasRestored) flashStatus('Dados salvos anteriormente foram carregados ✓');
+</script>
+</body>
+</html>
